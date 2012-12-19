@@ -28,25 +28,28 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import paging.core.DelegatorListener;
 import paging.core.PagingManager;
 import pagingTests.supportFiles.TerrainGridDelegator;
+import pagingTests.supportFiles.TerrainSimpleGrassDelegator;
 
 /**
  * test
  * @author t0neg0d
  */
-public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implements DelegatorListener, InputListener {
+public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implements DelegatorListener, ActionListener {
 	
 	ScheduledThreadPoolExecutor exec = new ScheduledThreadPoolExecutor(2);
 	private PagingManager pm;
+	
 	BulletAppState bulletAppState;
-	VideoRecorderAppState vrAppState;
-	boolean left = false, right = false, up = false, down = false; 
-	Vector3f walkDirection = Vector3f.ZERO;
-	float walkSpeed = 1.0f;
 	CharacterControl character;
 	Node cameraNode;
 	ChaseCamera chaseCam;
 	
-	boolean enabled = false;
+	VideoRecorderAppState vrAppState;
+	boolean left = false, right = false, up = false, down = false; 
+	Vector3f walkDirection = Vector3f.ZERO;
+	float walkSpeed = 1.0f;
+	
+	boolean enableCharacter = false;
 	
     public static void main(String[] args) {
         TestMeshDelegatorTilePhysicsLOD app = new TestMeshDelegatorTilePhysicsLOD();
@@ -60,6 +63,7 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
         bulletAppState = new BulletAppState();
 		bulletAppState.setThreadingType(BulletAppState.ThreadingType.PARALLEL);
 		stateManager.attach(bulletAppState);
+	//	bulletAppState.getPhysicsSpace().enableDebug(assetManager);
 		
 		cam.setFrustumFar(36000f);
 		float aspect = (float)cam.getWidth() / (float)cam.getHeight();
@@ -67,31 +71,35 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 		cam.update();
 		cam.setLocation(cam.getLocation().add(200f, 0f, 200f));
 		cam.lookAt(Vector3f.UNIT_Z, Vector3f.UNIT_Y);
-		cam.setLocation(cam.getLocation().add(0f, 5f, 0f));
+		cam.setLocation(cam.getLocation().add(0f, 15f, 0f));
 		flyCam.setMoveSpeed(100);
-		
-		setupKeys();
-		createCharacter();
 		
 		pm = new PagingManager(exec, cam);
 		pm.addPhysicsSupport(bulletAppState.getPhysicsSpace());
 		
-		
 		int tSize = 12;
 		int gSize = 41;
-		float gQSize = 1.5f;
+		float gQSize = 8f;
 		
 		TerrainGridDelegator terrainDelegator = new TerrainGridDelegator(assetManager, gSize, gQSize);
 		terrainDelegator.setTile(((float)(gSize-1))*gQSize, tSize, true);
 		terrainDelegator.setManagePhysics(true);
 		terrainDelegator.setManageLOD(true);
 		terrainDelegator.addLOD(PagingManager.LOD.LOD_1, 0f);
-		terrainDelegator.addLOD(PagingManager.LOD.LOD_2, 180f);
-		terrainDelegator.addLOD(PagingManager.LOD.LOD_3, 300f);
+		terrainDelegator.addLOD(PagingManager.LOD.LOD_2, 640f);
+		terrainDelegator.addLOD(PagingManager.LOD.LOD_3, 1280f);
 		
 		terrainDelegator.addListener(this);
 		
 		pm.registerDelegator("Terrain", terrainDelegator, rootNode, 60);
+		
+	//	TerrainSimpleGrassDelegator terrainGrassDelegator = new TerrainSimpleGrassDelegator(assetManager, ((float)(gSize-1))*gQSize, 1.5f, 2.0f);
+	//	terrainGrassDelegator.setManagePhysics(false);
+	//	terrainGrassDelegator.setManageLOD(false);
+	//	terrainDelegator.addDependantDelegator("Grass", terrainGrassDelegator);
+		
+		createCharacter();
+		setupKeys();
 		
 		AmbientLight al = new AmbientLight();
 		al.setColor(new ColorRGBA(1f, 1f, 1f, 1f));
@@ -107,10 +115,19 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 	}
 	
 	private void createCharacter() {
-		CapsuleCollisionShape capsule = new CapsuleCollisionShape(3f, 4f);
-		character = new CharacterControl(capsule, 5.01f);
-		cameraNode = new Node("Camera Node");
+		CapsuleCollisionShape capsule = new CapsuleCollisionShape(2f, 4f);
+		character = new CharacterControl(capsule, 1.01f);
 		
+	//	flyCam.setEnabled(false);
+		cameraNode = new Node("Camera Node");
+		//model.setLocalScale(0.5f);
+		
+		cameraNode.addControl(character);
+		character.setPhysicsLocation(new Vector3f(-140, 13, -10));
+		rootNode.attachChild(cameraNode);
+		
+		
+		flyCam.setEnabled(false);
 		chaseCam = new ChaseCamera(cam, cameraNode, inputManager);
 
 		chaseCam.setDefaultDistance(.005f);
@@ -125,10 +142,6 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 		chaseCam.setMinDistance(.005f);
 		chaseCam.setToggleRotationTrigger(new MouseButtonTrigger(MouseInput.BUTTON_RIGHT));
 		chaseCam.setInvertVerticalAxis(true);
-		
-		cameraNode.addControl(character);
-		character.setPhysicsLocation(new Vector3f(-5f, 4f, -5f));
-		rootNode.attachChild(cameraNode);
 	}
 	
 	private PhysicsSpace getPhysicsSpace() {
@@ -140,47 +153,39 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 		inputManager.addMapping("CharRight", new KeyTrigger(KeyInput.KEY_D));
 		inputManager.addMapping("CharUp", new KeyTrigger(KeyInput.KEY_W));
 		inputManager.addMapping("CharDown", new KeyTrigger(KeyInput.KEY_S));
-		inputManager.addMapping("CharSpace", new KeyTrigger(KeyInput.KEY_RETURN));
-		inputManager.addMapping("CharShoot", new KeyTrigger(KeyInput.KEY_SPACE));
 		inputManager.addListener(this, "CharLeft");
 		inputManager.addListener(this, "CharRight");
 		inputManager.addListener(this, "CharUp");
 		inputManager.addListener(this, "CharDown");
-		inputManager.addListener(this, "CharSpace");
-		inputManager.addListener(this, "CharShoot");
 	}
 
     @Override
     public void simpleUpdate(float tpf) {
-        if (enabled) {
-			System.out.println("enabled!");
+        if (enableCharacter) {
 			Vector3f camDir = cam.getDirection().clone().multLocal(walkSpeed);
 			Vector3f camLeft = cam.getLeft().clone().multLocal(walkSpeed);
 			camDir.y = 0;
 			camLeft.y = 0;
 			walkDirection.set(0, 0, 0);
-
+			
 			if (left)	{ walkDirection.addLocal(camLeft); }
 			if (right)	{ walkDirection.addLocal(camLeft.negate()); }
 			if (up)		{ walkDirection.addLocal(camDir); }
 			if (down)	{ walkDirection.addLocal(camDir.negate()); }
+			character.setViewDirection(cam.getDirection().setX(0).setZ(0));
 			character.setWalkDirection(walkDirection); 
 		}
     }
 
 	public void onAction(String binding, boolean value, float tpf) {
 		if (binding.equals("CharLeft")) {
-			if (value)	{ left = true; }
-			else		{ left = false; }
+			if (value)	{ left = true; } else { left = false; }
 		} else if (binding.equals("CharRight")) {
-			if (value)	{ right = true; }
-			else		{ right = false; }
+			if (value)	{ right = true; } else { right = false; }
 		} else if (binding.equals("CharUp")) {
-			if (value)	{ up = true; }
-			else		{ up = false; }
+			if (value)	{ up = true; } else { up = false; }
 		} else if (binding.equals("CharDown")) {
-			if (value)	{ down = true; }
-			else		{ down = false; }
+			if (value)	{ down = true; } else { down = false; }
 		}
 	}
 
@@ -192,12 +197,11 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 	@Override
 	public void stop() {
 		exec.shutdown();
-		while (!exec.isTerminating()) {  }
 		super.stop();
 	}
 
 	public void onAddToScene(Node node) {
-		if (!enabled) {
+		if (!enableCharacter) {
 			List<PhysicsRayTestResult> list = getPhysicsSpace().rayTest(cameraNode.getLocalTranslation(),cameraNode.getLocalTranslation().subtract(0f,200f,0f));
 			PhysicsCollisionObject result = null;
 			if (list.size() > 0) {
@@ -205,7 +209,7 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 			}
 			if (result != null) {
 				getPhysicsSpace().add(character);
-				enabled = true;
+				enableCharacter = true;
 			}
 		}
 	}
