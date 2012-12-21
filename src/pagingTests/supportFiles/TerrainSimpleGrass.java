@@ -68,28 +68,11 @@ public class TerrainSimpleGrass extends ManagedMesh {
 	
 	Spatial terrain;
 	
-	private Vector2f[][] coordTemplate = new Vector2f[][] {
-		{
-			new Vector2f(0f,0f),
-			new Vector2f(0.5f,0f),
-			new Vector2f(0f,0.5f),
-			new Vector2f(0.5f,0.5f)
-		},{
-			new Vector2f(0.5f,0f),
-			new Vector2f(1f,0f),
-			new Vector2f(0.5f,0.5f),
-			new Vector2f(1f,0.5f)
-		},{
-			new Vector2f(0f,0.5f),
-			new Vector2f(0.5f,0.5f),
-			new Vector2f(0f,1f),
-			new Vector2f(0.5f,1f)
-		},{
-			new Vector2f(0.5f,0.5f),
-			new Vector2f(1f,0.5f),
-			new Vector2f(0.5f,1f),
-			new Vector2f(1f,1f)
-		}
+	private Vector2f[] coordTemplate = new Vector2f[] {
+		new Vector2f(0f,0f),
+		new Vector2f(1f,0f),
+		new Vector2f(0f,1f),
+		new Vector2f(1f,1f)
 	};
 	private Vector3f[] normalsTemplate = new Vector3f[] {
 		new Vector3f(1f, 0f, 0f),
@@ -115,7 +98,7 @@ public class TerrainSimpleGrass extends ManagedMesh {
 		q180 = q180.fromAngleAxis(180f*2f*FastMath.DEG_TO_RAD, Vector3f.UNIT_Y);
 		q33 = q33.fromAngleAxis(33f*2f*FastMath.DEG_TO_RAD, Vector3f.UNIT_Y);
 		q66 = q66.fromAngleAxis(66f*2f*FastMath.DEG_TO_RAD, Vector3f.UNIT_Y);
-		
+		/*
 		this.coordTemplate = new Vector2f[imgCols+imgRows][4];
 		int index = 0;
 		for (int i = 0; i < imgCols; i++) {
@@ -127,6 +110,7 @@ public class TerrainSimpleGrass extends ManagedMesh {
 				index++;
 			}
 		}
+		*/
 	}
 	
 	public void setImpostorWidth(float width) {
@@ -147,17 +131,16 @@ public class TerrainSimpleGrass extends ManagedMesh {
 		return this.height;
 	}
 	
-	public Node applyToTerrainGrid(Node terrain, float gridDimensions) {
-		this.terrain = terrain;
-		
-		int cVerts = 10;//(int)(FastMath.sqrt(terrain.getVertexCount()/4));
+	public void applyToTerrainGrid(List<Vector3f> positions) {
+		/*
+		int cVerts = 15;//(int)(FastMath.sqrt(terrain.getVertexCount()/4));
 		float offset = gridDimensions/(float)cVerts;
 		offset += offset*0.1f;
 		float randOffset = offset;//*0.25f;
 		Vector3f position = null;
-		Ray ray = new Ray();
-		CollisionResults rayResults = new CollisionResults();
-		CollisionResult result = null;
+	//	Ray ray = new Ray();
+	//	CollisionResults rayResults = new CollisionResults();
+	//	CollisionResult result = null;
 		
 		for (int x = -1; x < cVerts+1; x++) {
 			for (int z = -1; z < cVerts+1; z++) {
@@ -170,11 +153,15 @@ public class TerrainSimpleGrass extends ManagedMesh {
 					if ((int)Math.round(Math.random()) == 0) {
 						rand2 = -rand2;
 					}
+					Ray ray = new Ray();
 					ray.setOrigin(terrain.getLocalTranslation().add(offset*(float)x+rand1, 4000f, offset*(float)z+rand2));
 					ray.setDirection(Vector3f.UNIT_Y.negate());
-					rayResults.clear();
+					
+					CollisionResults rayResults = new CollisionResults();
 					terrain.collideWith(ray, rayResults);
-					result = null;
+					
+					CollisionResult result = null;
+					
 					if (rayResults.size() > 0) {
 						result = rayResults.getCollision(0);
 					}
@@ -186,6 +173,10 @@ public class TerrainSimpleGrass extends ManagedMesh {
 				}
 			}
 		}
+		*/
+		for (int i = 0; i < positions.size(); i++) {
+			addGrass(positions.get(i));
+		}
 		build();
 		
 	//	verts.clear();
@@ -196,8 +187,6 @@ public class TerrainSimpleGrass extends ManagedMesh {
 		indexes = null;
 	//	normals.clear();
 		normals = null;
-				
-		return terrain;
 	}
 	
 	public void addGrass(Vector3f offsetVec) {
@@ -219,7 +208,7 @@ public class TerrainSimpleGrass extends ManagedMesh {
 			if (rand4 == 0)	{ rand = 1; }
 			else			{ rand = 2; }
 		}
-		rand = 3;
+		rand = 0;
 		
 		if (rand == 0 || rand == 3) {
 			nHeightUnit = ((float)Math.random()*(heightUnit/3f))+(heightUnit*2f);
@@ -278,7 +267,7 @@ public class TerrainSimpleGrass extends ManagedMesh {
 	//	System.out.println(rand);
 		for (int x = 0; x < 6; x++) {
 			for (int i = 0; i < 4; i++) {
-				texCoord.add(coordTemplate[rand][i]);
+				texCoord.add(coordTemplate[i]);
 			}
 		}
 		
