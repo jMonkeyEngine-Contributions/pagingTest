@@ -13,6 +13,7 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.control.Control;
 import java.io.IOException;
 import paging.core.ManagedNodeDelegator;
+import paging.core.tasks.DelegatorTask;
 
 /**
  *
@@ -22,6 +23,11 @@ public class SectorDelegator extends ManagedNodeDelegator {
 
 	public SectorDelegator() {
 		
+	}
+	
+	@Override
+	public void delegatorTaskCustomData(float tpf, DelegatorTask task) {
+	//	throw new UnsupportedOperationException("Not supported yet.");
 	}
 	
 	@Override
