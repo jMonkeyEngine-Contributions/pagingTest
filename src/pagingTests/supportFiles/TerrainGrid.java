@@ -387,14 +387,14 @@ public final class TerrainGrid extends ManagedMesh {
 	public void buildMesh() {
 		//Rebuild mesh buffers
 		this.clearBuffer(Type.Position);
-		this.setBuffer(Type.Position,	3, BufferUtils.createFloatBuffer(finVerticesL));
-		this.clearBuffer(Type.TexCoord);
-		this.setBuffer(Type.TexCoord,	2, BufferUtils.createFloatBuffer(finTexCoordL));
-		this.clearBuffer(Type.Index);
-		this.setBuffer(Type.Index,		3, BufferUtils.createIntBuffer(finIndexesL));
-		this.clearBuffer(Type.Normal);
-		this.setBuffer(Type.Normal,		3, BufferUtils.createFloatBuffer(finNormalsL));
-		this.setCurrentLOD(LOD.LOD_3);
+				this.setBuffer(Type.Position,	3, BufferUtils.createFloatBuffer(finVertices));
+				this.clearBuffer(Type.TexCoord);
+				this.setBuffer(Type.TexCoord,	2, BufferUtils.createFloatBuffer(finTexCoord));
+				this.clearBuffer(Type.Index);
+				this.setBuffer(Type.Index,		3, BufferUtils.createIntBuffer(finIndexes));
+				this.clearBuffer(Type.Normal);
+				this.setBuffer(Type.Normal,		3, BufferUtils.createFloatBuffer(finNormals));
+		this.setCurrentLOD(LOD.LOD_1);
 		this.updateBound();
 	}
 	
