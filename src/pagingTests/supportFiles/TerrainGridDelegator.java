@@ -21,6 +21,7 @@ import java.io.IOException;
 import paging.core.ManagedMeshDelegator;
 import paging.core.spatials.ManagedMesh;
 import paging.core.spatials.ManagedNode;
+import paging.core.tasks.DelegatorTask;
 
 /**
  *
@@ -77,12 +78,17 @@ public class TerrainGridDelegator extends ManagedMeshDelegator {
 	}
 
 	@Override
-	protected ManagedMesh createMesh(Vector3f position, ManagedNode dependentNode) {
+	protected ManagedMesh createMesh(Vector3f position, ManagedNode dependentNode, Object customData) {
 		TerrainGrid grid = new TerrainGrid(assetManager, gridSize, gridQuadSize, position);
 		grid.buildMesh();
 		return grid;
 	}
-
+	
+	@Override
+	public void delegatorTaskCustomData(float tpf, DelegatorTask task) {
+	//	throw new UnsupportedOperationException("Not supported yet.");
+	}
+	
 	@Override
 	public void delegatorUpdate(float tpf) {
 	//	throw new UnsupportedOperationException("Not supported yet.");
