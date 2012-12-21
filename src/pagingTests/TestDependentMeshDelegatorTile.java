@@ -70,7 +70,7 @@ public class TestDependentMeshDelegatorTile extends SimpleApplication {
 		
 		pm.registerDelegator("Terrain", terrainDelegator, rootNode, 60);
 		
-		TerrainSimpleGrassDelegator terrainGrassDelegator = new TerrainSimpleGrassDelegator(assetManager, ((float)(gSize-1))*gQSize, 1.5f, 2.0f);
+		TerrainSimpleGrassDelegator terrainGrassDelegator = new TerrainSimpleGrassDelegator(assetManager, ((float)(gSize-1))*gQSize, 1.5f, 2.0f, gQSize*2, 1);
 		terrainGrassDelegator.setManagePhysics(false);
 		terrainGrassDelegator.setManageLOD(false);
 		terrainDelegator.addDependantDelegator("Grass", terrainGrassDelegator);
