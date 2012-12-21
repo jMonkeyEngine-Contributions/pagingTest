@@ -29,6 +29,7 @@ import paging.core.DelegatorListener;
 import paging.core.PagingManager;
 import pagingTests.supportFiles.TerrainGridDelegator;
 import pagingTests.supportFiles.TerrainSimpleGrassDelegator;
+import pagingTests.supportFiles.TerrainSimpleTreeDelegator;
 
 /**
  * test
@@ -47,7 +48,7 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 	VideoRecorderAppState vrAppState;
 	boolean left = false, right = false, up = false, down = false; 
 	Vector3f walkDirection = Vector3f.ZERO;
-	float walkSpeed = 1.0f;
+	float walkSpeed = .6f;
 	
 	boolean enableCharacter = false;
 	
@@ -63,6 +64,7 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
         bulletAppState = new BulletAppState();
 		bulletAppState.setThreadingType(BulletAppState.ThreadingType.PARALLEL);
 		stateManager.attach(bulletAppState);
+		
 	//	bulletAppState.getPhysicsSpace().enableDebug(assetManager);
 		
 		cam.setFrustumFar(36000f);
@@ -77,9 +79,9 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 		pm = new PagingManager(exec, cam);
 		pm.addPhysicsSupport(bulletAppState.getPhysicsSpace());
 		
-		int tSize = 12;
+		int tSize = 10;
 		int gSize = 41;
-		float gQSize = 8f;
+		float gQSize = 1.5f;
 		
 		TerrainGridDelegator terrainDelegator = new TerrainGridDelegator(assetManager, gSize, gQSize);
 		terrainDelegator.setTile(((float)(gSize-1))*gQSize, tSize, true);
@@ -93,10 +95,17 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 		
 		pm.registerDelegator("Terrain", terrainDelegator, rootNode, 60);
 		
-	//	TerrainSimpleGrassDelegator terrainGrassDelegator = new TerrainSimpleGrassDelegator(assetManager, ((float)(gSize-1))*gQSize, 1.5f, 2.0f);
-	//	terrainGrassDelegator.setManagePhysics(false);
-	//	terrainGrassDelegator.setManageLOD(false);
-	//	terrainDelegator.addDependantDelegator("Grass", terrainGrassDelegator);
+		TerrainSimpleGrassDelegator terrainGrassDelegator = new TerrainSimpleGrassDelegator(assetManager, ((float)(gSize-1))*gQSize, 1.25f, 3f, gQSize*2, 1);
+		terrainGrassDelegator.setManagePhysics(false);
+		terrainGrassDelegator.setManageLOD(false);
+		terrainDelegator.addDependantDelegator("Grass", terrainGrassDelegator);
+		
+		TerrainSimpleTreeDelegator terrainTreeDelegator = new TerrainSimpleTreeDelegator(assetManager, ((float)(gSize-1))*gQSize);
+		terrainTreeDelegator.setTile(((float)(gSize-1))*gQSize, tSize/4*3, true);
+		terrainTreeDelegator.setManagePhysics(false);
+		terrainTreeDelegator.setManageLOD(false);
+		pm.registerDelegator("Tree", terrainTreeDelegator, rootNode, 30);
+		terrainDelegator.addListener(terrainTreeDelegator);
 		
 		createCharacter();
 		setupKeys();
@@ -116,7 +125,7 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 	
 	private void createCharacter() {
 		CapsuleCollisionShape capsule = new CapsuleCollisionShape(2f, 4f);
-		character = new CharacterControl(capsule, 1.01f);
+		character = new CharacterControl(capsule, 0.1f);
 		
 	//	flyCam.setEnabled(false);
 		cameraNode = new Node("Camera Node");
