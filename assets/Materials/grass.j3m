@@ -1,0 +1,17 @@
+Material My Material : Common/MatDefs/Light/Lighting.j3md {
+     MaterialParameters {
+        DiffuseMap : Textures/Vegetation/Grass001.png
+        UseAlpha : true
+        HighQuality : false
+        UseMaterialColors : true
+        Diffuse : 1.0 1.0 1.0 1.0
+        Ambient : 1.0 1.0 1.0 1.0
+        AlphaDiscardThreshold : 0.75
+     }
+    AdditionalRenderState {
+      FaceCull Back
+      DepthWrite On
+      AlphaTestFalloff 0.0
+      Blend Alpha
+    }
+}

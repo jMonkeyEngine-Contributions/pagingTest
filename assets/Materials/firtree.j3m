@@ -1,0 +1,27 @@
+Material MyMaterial : MatDefs/Lighting.j3md {
+    MaterialParameters {
+        UseAlpha : true
+        GlowColor : 0.0 0.0 0.0 0.0
+        Specular : 0.0 0.0 0.0 0.0
+        Diffuse : 1.0 1.0 1.0 0.0
+        UseMaterialColors : false
+        ParallaxHeight : 0.05
+        Ambient : 1.0 1.0 1.0 0.5
+        Shininess : 0.0
+        HighQuality : false
+        UseVertexColor : true
+        AlphaDiscardThreshold : 0.75
+        DiffuseMap : Textures/firtree.png
+    }
+    AdditionalRenderState {
+      FaceCull Back
+      Wireframe Off
+      DepthWrite On
+      PolyOffset 0.0 0.0
+      AlphaTestFalloff 0.0
+      Blend Alpha
+      PointSprite Off
+      ColorWrite On
+      DepthTest On
+    }
+}
