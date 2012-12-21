@@ -46,6 +46,7 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 	ChaseCamera chaseCam;
 	
 	VideoRecorderAppState vrAppState;
+	
 	boolean left = false, right = false, up = false, down = false; 
 	Vector3f walkDirection = Vector3f.ZERO;
 	float walkSpeed = .6f;
@@ -101,7 +102,7 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 		terrainDelegator.addDependantDelegator("Grass", terrainGrassDelegator);
 		
 		TerrainSimpleTreeDelegator terrainTreeDelegator = new TerrainSimpleTreeDelegator(assetManager, ((float)(gSize-1))*gQSize);
-		terrainTreeDelegator.setTile(((float)(gSize-1))*gQSize, tSize/4*3, true);
+		terrainTreeDelegator.setTile(((float)(gSize-1))*gQSize, tSize, true);
 		terrainTreeDelegator.setManagePhysics(false);
 		terrainTreeDelegator.setManageLOD(false);
 		pm.registerDelegator("Tree", terrainTreeDelegator, rootNode, 30);
@@ -162,6 +163,7 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 		inputManager.addMapping("CharRight", new KeyTrigger(KeyInput.KEY_D));
 		inputManager.addMapping("CharUp", new KeyTrigger(KeyInput.KEY_W));
 		inputManager.addMapping("CharDown", new KeyTrigger(KeyInput.KEY_S));
+		inputManager.addMapping("F9", new KeyTrigger(KeyInput.KEY_F9));
 		inputManager.addListener(this, "CharLeft");
 		inputManager.addListener(this, "CharRight");
 		inputManager.addListener(this, "CharUp");
@@ -195,6 +197,12 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 			if (value)	{ up = true; } else { up = false; }
 		} else if (binding.equals("CharDown")) {
 			if (value)	{ down = true; } else { down = false; }
+		} else if (binding.equals("F9")) {
+			if (stateManager.hasState(vrAppState))	{ 
+				stateManager.detach(vrAppState);
+			} else {
+				stateManager.attach(vrAppState);
+			}
 		}
 	}
 
