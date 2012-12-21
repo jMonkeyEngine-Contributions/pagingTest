@@ -66,7 +66,8 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 		bulletAppState.setThreadingType(BulletAppState.ThreadingType.PARALLEL);
 		stateManager.attach(bulletAppState);
 		
-	//	bulletAppState.getPhysicsSpace().enableDebug(assetManager);
+		vrAppState = new VideoRecorderAppState();
+		vrAppState.setQuality(0.35f);
 		
 		cam.setFrustumFar(36000f);
 		float aspect = (float)cam.getWidth() / (float)cam.getHeight();
@@ -168,6 +169,7 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 		inputManager.addListener(this, "CharRight");
 		inputManager.addListener(this, "CharUp");
 		inputManager.addListener(this, "CharDown");
+		inputManager.addListener(this, "F9");
 	}
 
     @Override
@@ -198,10 +200,14 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 		} else if (binding.equals("CharDown")) {
 			if (value)	{ down = true; } else { down = false; }
 		} else if (binding.equals("F9")) {
-			if (stateManager.hasState(vrAppState))	{ 
-				stateManager.detach(vrAppState);
-			} else {
-				stateManager.attach(vrAppState);
+			if (!value) {
+				if (stateManager.hasState(vrAppState))	{ 
+					System.out.println("Stopping video recorder");
+					stateManager.detach(vrAppState);
+				} else {
+					System.out.println("Starting video recorder");
+					stateManager.attach(vrAppState);
+				}
 			}
 		}
 	}
