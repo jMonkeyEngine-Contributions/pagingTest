@@ -1,6 +1,5 @@
 #import "Common/ShaderLib/Parallax.glsllib"
 #import "Common/ShaderLib/Optics.glsllib"
-
 #define ATTENUATION
 //#define HQ_ATTENUATION
 
@@ -9,15 +8,9 @@ varying vec2 texCoord;
   varying vec2 texCoord2;
 #endif
 
-#ifdef HAS_ALPHA_MODIFIER
-	uniform float m_AlphaModifier;
-#endif
-
 varying vec3 AmbientSum;
 varying vec4 DiffuseSum;
 varying vec3 SpecularSum;
-
-uniform float m_Scale;
 
 #ifndef VERTEX_LIGHTING
   uniform vec4 g_LightDirection;
@@ -143,35 +136,6 @@ vec2 computeLighting(in vec3 wvNorm, in vec3 wvViewDir, in vec3 wvLightDir){
 }
 #endif
 
-
-float get_linearrgb(float c) {
-	if(c < 0.04045)	return (c < 0.0)? 0.0: c * (1.0/12.92);
-	else			return pow((c + 0.055)*(1.0/1.055), 2.4);
-}
-
-vec4 srgb_to_linearrgb(in vec4 col_in) {
-	vec4 color = vec4(0.0);
-	color.r = get_linearrgb(col_in.r);
-	color.g = get_linearrgb(col_in.g);
-	color.b = get_linearrgb(col_in.b);
-	color.a = col_in.a;
-	return color;
-}
-
-float get_srgb(float c) {
-	if(c < 0.0031308)	return (c < 0.0)? 0.0: c * 12.92;
-	else				return 1.055 * pow(c, 1.0/2.4) - 0.055;
-}
-
-vec4 linearrgb_to_srgb(in vec4 col_in) {
-	vec4 color = vec4(0.0);
-	color.r = get_srgb(col_in.r);
-	color.g = get_srgb(col_in.g);
-	color.b = get_srgb(col_in.b);
-	color.a = col_in.a;
-	return color;
-}
-
 void main(){
     vec2 newTexCoord;
      
@@ -199,14 +163,14 @@ void main(){
     #endif
     
    #ifdef DIFFUSEMAP
-      vec4 diffuseColor = texture2D(m_DiffuseMap, newTexCoord*m_Scale);
+      vec4 diffuseColor = texture2D(m_DiffuseMap, newTexCoord);
     #else
       vec4 diffuseColor = vec4(1.0);
     #endif
 
     float alpha = DiffuseSum.a * diffuseColor.a;
     #ifdef ALPHAMAP
-       alpha = alpha * texture2D(m_AlphaMap, newTexCoord*m_Scale).r;
+       alpha = alpha * texture2D(m_AlphaMap, newTexCoord).r;
     #endif
     if(alpha < m_AlphaDiscardThreshold){
         discard;
@@ -246,8 +210,8 @@ void main(){
     // Read from textures
     // ***********************
     #if defined(NORMALMAP) && !defined(VERTEX_LIGHTING)
-      vec4 normalHeight = texture2D(m_NormalMap, newTexCoord*m_Scale);
-      vec3 normal = (normalHeight.xyz * vec3(2.0) - vec3(1.0));
+      vec4 normalHeight = texture2D(m_NormalMap, newTexCoord);
+      vec3 normal = normalize((normalHeight.xyz * vec3(2.0) - vec3(1.0)));
       #ifdef LATC
         normal.z = sqrt(1.0 - (normal.x * normal.x) - (normal.y * normal.y));
       #endif
@@ -260,7 +224,7 @@ void main(){
     #endif
 
     #ifdef SPECULARMAP
-      vec4 specularColor = texture2D(m_SpecularMap, newTexCoord*m_Scale);
+      vec4 specularColor = texture2D(m_SpecularMap, newTexCoord);
     #else
       vec4 specularColor = vec4(1.0);
     #endif
@@ -268,9 +232,9 @@ void main(){
     #ifdef LIGHTMAP
        vec3 lightMapColor;
        #ifdef SEPARATE_TEXCOORD
-          lightMapColor = texture2D(m_LightMap, texCoord2*m_Scale).rgb;
+          lightMapColor = texture2D(m_LightMap, texCoord2).rgb;
        #else
-          lightMapColor = texture2D(m_LightMap, texCoord*m_Scale).rgb;
+          lightMapColor = texture2D(m_LightMap, texCoord).rgb;
        #endif
        specularColor.rgb *= lightMapColor;
        diffuseColor.rgb  *= lightMapColor;
@@ -283,8 +247,7 @@ void main(){
            light.y = texture2D(m_ColorRamp, vec2(light.y, 0.0)).r;
        #endif
 
-    //   diffuseColor = linearrgb_to_srgb(diffuseColor);
-	   gl_FragColor.rgb =  AmbientSum     * diffuseColor.rgb + 
+       gl_FragColor.rgb =  AmbientSum     * diffuseColor.rgb + 
                            DiffuseSum.rgb * diffuseColor.rgb  * vec3(light.x) +
                            SpecularSum    * specularColor.rgb * vec3(light.y);
     #else
@@ -310,27 +273,10 @@ void main(){
             SpecularSum2 = vec4(1.0);
             light.y = 1.0;
        #endif
-	   
-	//   diffuseColor = linearrgb_to_srgb(diffuseColor);
-	   gl_FragColor.rgb =  AmbientSum       * diffuseColor.rgb  +
+
+       gl_FragColor.rgb =  AmbientSum       * diffuseColor.rgb  +
                            DiffuseSum.rgb   * diffuseColor.rgb  * vec3(light.x) +
                            SpecularSum2.rgb * specularColor.rgb * vec3(light.y);
     #endif
-	/*
-	vec4 fogColor = m_FogColor;
-	float depth = fog_z / m_FogDistance;
-	float LOG2 = 1.442695;
-
-	float fogFactor = exp2( -m_FogDensity * m_FogDensity * depth * depth * LOG2 );
-	fogFactor = clamp(fogFactor, 0.0, 1.0);
-	fogColor *= 0.2;
-	fogColor.a = 1.0-fogFactor;
-//	gl_FragColor.rgb = mix(fogColor,gl_FragColor,fogFactor).rgb;
-	*/
-	
-//	gl_FragColor = mixFog(m_FogMode, m_FogColor, m_FogStartDistance, m_FogEndDistance, m_FogDensity, m_ExcludeSky, gl_FragColor, fog_z, texCoord);
-	gl_FragColor.a = alpha;
-	#ifdef HAS_ALPHA_MODIFIER
-		gl_FragColor.a *= m_AlphaModifier;
-	#endif
+    gl_FragColor.a = alpha;
 }
