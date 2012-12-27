@@ -88,6 +88,8 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 		pm = new PagingManager(exec, cam);
 		pm.addPhysicsSupport(bulletAppState.getPhysicsSpace());
 		
+		rootNode.addControl(pm);
+		
 		int tSize = 10;
 		int gSize = 41;
 		float gQSize = 5f;
