@@ -3,16 +3,8 @@
 #define ATTENUATION
 //#define HQ_ATTENUATION
 
-varying float fog_z;
-uniform int m_FogMode;
-uniform bool m_ExcludeSky;
-uniform vec4 m_FogColor;
-uniform float m_FogStartDistance;
-uniform float m_FogEndDistance;
-uniform float m_FogDensity;
-
-  varying vec4 vtVertex;
-  varying vec3 vtNormal;
+varying vec4 vtVertex;
+varying vec3 vtNormal;
 
 varying vec2 texCoord;
 #ifdef SEPARATE_TEXCOORD
@@ -27,9 +19,12 @@ varying vec2 texCoord;
   uniform sampler2D m_DiffuseMap2;
   uniform float m_DiffuseScale2;
 #endif
-#ifdef HAS_DIF_3
-  uniform sampler2D m_DiffuseMap3;
-  uniform float m_DiffuseScale3;
+
+#ifdef HAS_NORM_1
+  uniform sampler2D m_NormalMap1;
+#endif
+#ifdef HAS_NORM_2
+  uniform sampler2D m_NormalMap2;
 #endif
 
 varying vec3 AmbientSum;
@@ -160,6 +155,7 @@ vec2 computeLighting(in vec3 wvNorm, in vec3 wvViewDir, in vec3 wvLightDir){
 }
 #endif
 
+#if defined(HAS_DIF_1) && defined(HAS_DIF_2)
 vec4 compositeTerrain(in vec2 newTexCoord, in vec4 diffuseColor) {
 	vec4 ret = vec4(diffuseColor);
 	
@@ -183,41 +179,44 @@ vec4 compositeTerrain(in vec2 newTexCoord, in vec4 diffuseColor) {
     ret = col1 * blending.x;
 	ret += col3 * blending.z;
 	ret += col2 * blending.y;
-
-	/*
-	#ifdef HAS_DIF_1
-		vec4 diffuseColor1 = texture2D(m_DiffuseMap1, vec2(newTexCoord.x,1.0-newTexCoord.y)*(m_DiffuseScale1*1.75));
-		vec4 alphaColor1 = texture2D(m_AlphaMap1, vec2(newTexCoord.x,1.0-newTexCoord.y));
-		ret.rgb = mix(ret.rgb, diffuseColor1.rgb, alphaColor1.r);
-	#endif
-	#ifdef HAS_DIF_2
-		vec4 diffuseColor2 = texture2D(m_DiffuseMap2, vec2(newTexCoord.x,1.0-newTexCoord.y)*(m_DiffuseScale2*1.75));
-		vec4 alphaColor2 = texture2D(m_AlphaMap2, vec2(newTexCoord.x,1.0-newTexCoord.y));
-		ret.rgb = mix(ret.rgb, diffuseColor2.rgb, alphaColor2.r);
-	#endif
-	#ifdef HAS_DIF_3
-		vec4 diffuseColor3 = texture2D(m_DiffuseMap3, vec2(newTexCoord.x,1.0-newTexCoord.y)*(m_DiffuseScale3*1.75));
-		vec4 alphaColor3 = texture2D(m_AlphaMap3, vec2(newTexCoord.x,1.0-newTexCoord.y));
-		ret.rgb = mix(ret.rgb, diffuseColor3.rgb, alphaColor3.r);
-	#endif
-	#ifdef HAS_DIF_4
-		vec4 diffuseColor4 = texture2D(m_DiffuseMap4, vec2(newTexCoord.x,1.0-newTexCoord.y)*(m_DiffuseScale4*1.75));
-		vec4 alphaColor4 = texture2D(m_AlphaMap4, vec2(newTexCoord.x,1.0-newTexCoord.y));
-		ret.rgb = mix(ret.rgb, diffuseColor4.rgb, alphaColor4.r);
-	#endif
-	#ifdef HAS_DIF_5
-		vec4 diffuseColor5 = texture2D(m_DiffuseMap5, vec2(newTexCoord.x,1.0-newTexCoord.y)*(m_DiffuseScale5*1.75));
-		vec4 alphaColor5 = texture2D(m_AlphaMap5, vec2(newTexCoord.x,1.0-newTexCoord.y));
-		ret.rgb = mix(ret.rgb, diffuseColor5.rgb, alphaColor5.r);
-	#endif
-*/
+	
 	return ret;
 }
+#endif
+
+#if defined(HAS_NORM_1) && defined(HAS_NORM_2)
+vec4 compositeNormals(in vec2 newTexCoord, in vec4 normalColor) {
+	vec4 ret = vec4(normalColor);
+	
+	vec3 blending = abs( vtNormal );
+    blending = (blending -0.2) * 0.7;
+    blending = normalize(max(blending, 0.00001));      // Force weights to sum to 1.0 (very important!)
+    float b = (blending.x + blending.y + blending.z);
+    blending /= vec3(b, b, b);
+
+    // texture coords
+    vec4 coords = vtVertex;
+	vec4 col1;
+	vec4 col2;
+	vec4 col3;
+	
+	col1 = texture2D( m_NormalMap2, coords.yz * m_DiffuseScale2 );
+	col2 = texture2D( m_NormalMap1, coords.xz * m_DiffuseScale1 );
+	col3 = texture2D( m_NormalMap2, coords.xy * m_DiffuseScale2 );
+	
+	// blend the results of the 3 planar projections.
+    ret = col1 * blending.x;
+	ret += col3 * blending.z;
+	ret += col2 * blending.y;
+	
+	return ret;
+}
+#endif
 
 void main(){
     vec2 newTexCoord;
-    
-	#if (defined(PARALLAXMAP) || (defined(NORMALMAP_PARALLAX) && defined(NORMALMAP))) && !defined(VERTEX_LIGHTING) 
+     
+    #if (defined(PARALLAXMAP) || (defined(NORMALMAP_PARALLAX) && defined(NORMALMAP))) && !defined(VERTEX_LIGHTING) 
      
        #ifdef STEEP_PARALLAX
            #ifdef NORMALMAP_PARALLAX
@@ -240,8 +239,8 @@ void main(){
        newTexCoord = texCoord;    
     #endif
     
-   #ifdef DIFFUSEMAP
-      vec4 diffuseColor = texture2D(m_DiffuseMap, newTexCoord);
+   #if defined(HAS_DIF_1) && defined(HAS_DIF_2)
+      vec4 diffuseColor = compositeTerrain(newTexCoord, vec4(0.0));
     #else
       vec4 diffuseColor = vec4(1.0);
     #endif
@@ -253,9 +252,7 @@ void main(){
     if(alpha < m_AlphaDiscardThreshold){
         discard;
     }
-	
-	diffuseColor = compositeTerrain(newTexCoord, diffuseColor);
-	
+
     #ifndef VERTEX_LIGHTING
         float spotFallOff = 1.0;
 
@@ -289,13 +286,13 @@ void main(){
     // ***********************
     // Read from textures
     // ***********************
-    #if defined(NORMALMAP) && !defined(VERTEX_LIGHTING)
-      vec4 normalHeight = texture2D(m_NormalMap, newTexCoord);
-      vec3 normal = (normalHeight.xyz * vec3(2.0) - vec3(1.0));
-      #ifdef LATC
-        normal.z = sqrt(1.0 - (normal.x * normal.x) - (normal.y * normal.y));
-      #endif
-      //normal.y = -normal.y;
+    #if defined(HAS_NORM_1) && defined(HAS_NORM_2) && !defined(VERTEX_LIGHTING)
+		vec4 normalHeight = compositeNormals(newTexCoord, vec4(0.0));
+		vec3 normal = normalize((normalHeight.xyz * vec3(2.0) - vec3(1.0)));
+		#ifdef LATC
+		  normal.z = sqrt(1.0 - (normal.x * normal.x) - (normal.y * normal.y));
+		#endif
+	//normal.y = -normal.y;
     #elif !defined(VERTEX_LIGHTING)
       vec3 normal = vNormal;
       #if !defined(LOW_QUALITY) && !defined(V_TANGENT)
@@ -358,18 +355,5 @@ void main(){
                            DiffuseSum.rgb   * diffuseColor.rgb  * vec3(light.x) +
                            SpecularSum2.rgb * specularColor.rgb * vec3(light.y);
     #endif
-	/*
-	vec4 fogColor = m_FogColor;
-	float depth = fog_z / m_FogDistance;
-	float LOG2 = 1.442695;
-
-	float fogFactor = exp2( -m_FogDensity * m_FogDensity * depth * depth * LOG2 );
-	fogFactor = clamp(fogFactor, 0.0, 1.0);
-	fogColor *= 0.2;
-	fogColor.a = 1.0-fogFactor;
-//	gl_FragColor.rgb = mix(fogColor,gl_FragColor,fogFactor).rgb;
     gl_FragColor.a = alpha;
-	*/
-//	gl_FragColor = mixFog(m_FogMode, m_FogColor, m_FogStartDistance, m_FogEndDistance, m_FogDensity, m_ExcludeSky, gl_FragColor, fog_z, texCoord);
-//	gl_FragColor.a = alpha;
 }

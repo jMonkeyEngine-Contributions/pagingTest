@@ -1,0 +1,52 @@
+const float LOG2 = 1.442695;
+
+float computeLinearFogFactor(in float depth, in vec2 frustumNear, in vec2 frustumFar) {
+	float depthS = (2.0 * frustumNear.x) / (frustumNear.y + frustumNear.x * (frustumNear.y - frustumNear.x));
+	float depthE = (2.0 * frustumFar.x) / (frustumFar.y + frustumFar.x * (frustumFar.y - frustumFar.x));
+	float fogDepth =	1.0/((frustumFar) / 
+						(frustumNear - depth *
+						(frustumNear)));
+	float fogFactor;
+	fogFactor = (depthE - fogDepth) / (depthE - depthS);
+	fogFactor = clamp( fogFactor, 0.0, 1.0 );
+	return fogFactor;
+}
+
+float computeExp2FogFactorC2D(in float depth, in float density, in vec2 frustumNear) {
+	float depthS = 1.0-(2.0 * frustumNear.x) / (frustumNear.y + frustumNear.x * (frustumNear.y-frustumNear.x));
+	float fogDepth = ((depthS) / 
+					((frustumNear.y) - depth *
+					((frustumNear.y))))*(depthS*4.0);
+	float fogFactor = 0.0;
+	if (depth < depthS)
+		fogFactor = exp2( -density * density * fogDepth *  fogDepth * LOG2 );
+	fogFactor = clamp(fogFactor, 0.0, 1.0);
+	return fogFactor;
+}
+
+float computeExp2FogFactorD2I(in float depth, in float density, in float fogSDist, in float fogEDist) {
+	float depthS = (2.0 * 1.0) / (fogSDist + 1.0 * (fogSDist-1.0));
+	
+	float fogDepth = (depth - depthS / fogEDist) / fogSDist;
+	float fogFactor = 1.0;
+//	if (depth > depthS)
+		fogFactor = exp2( -density * density * fogDepth * fogDepth * LOG2 );
+	fogFactor = clamp(fogFactor, 0.0, 1.0);
+	return 1.0-fogFactor;
+}
+
+vec4 mixFog(in int fogMode, in vec4 fogColor, in float fogSDist, in float fogEDist, in float density, in bool excludeSky, in vec4 color, in float depth, in vec2 texCoord) {
+	vec2 frustumNear	= vec2(1.0,fogSDist);
+	vec2 frustumFar		= vec2(1.0,fogEDist);
+	
+	float fogFactor;
+	
+	if (fogMode == 0) fogFactor = computeLinearFogFactor(depth, frustumNear, frustumFar);
+	if (fogMode == 1) fogFactor = computeExp2FogFactorC2D(depth, density, frustumNear);
+	if (fogMode == 2) fogFactor = computeExp2FogFactorD2I(depth, density, fogSDist, fogEDist);
+	
+	vec4 fogC = fogColor * 0.3375;
+	fogC.a = fogFactor;
+	
+	return mix(color,fogC,fogFactor);
+}

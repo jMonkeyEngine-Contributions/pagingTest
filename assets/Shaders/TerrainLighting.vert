@@ -6,11 +6,6 @@ uniform mat4 g_WorldViewMatrix;
 uniform mat3 g_NormalMatrix;
 uniform mat4 g_ViewMatrix;
 
-uniform vec4 m_FogColor;
-uniform float m_FogDensity;
-uniform float m_FogDistance;
-varying float fog_z;
-
 uniform vec4 m_Ambient;
 uniform vec4 m_Diffuse;
 uniform vec4 m_Specular;
@@ -20,9 +15,8 @@ uniform vec4 g_LightColor;
 uniform vec4 g_LightPosition;
 uniform vec4 g_AmbientLightColor;
 
-
-  varying vec4 vtVertex;
-  varying vec3 vtNormal;
+varying vec4 vtVertex;
+varying vec3 vtNormal;
 
 varying vec2 texCoord;
 #ifdef SEPARATE_TEXCOORD
@@ -58,7 +52,7 @@ varying vec3 lightVec;
   varying vec2 vertexLightValues;
   uniform vec4 g_LightDirection;
 #endif
-/*
+
 #ifdef USE_REFLECTION
     uniform vec3 g_CameraPosition;
     uniform mat4 g_WorldMatrix;
@@ -66,6 +60,17 @@ varying vec3 lightVec;
     uniform vec3 m_FresnelParams;
     varying vec4 refVec;
 
+
+    /**
+     * Input:
+     * attribute inPosition
+     * attribute inNormal
+     * uniform g_WorldMatrix
+     * uniform g_CameraPosition
+     *
+     * Output:
+     * varying refVec
+     */
     void computeRef(){
         vec3 worldPos = (g_WorldMatrix * vec4(inPosition,1.0)).xyz;
 
@@ -76,7 +81,7 @@ varying vec3 lightVec;
         refVec.w   = m_FresnelParams.x + m_FresnelParams.y * pow(1.0 + dot(I, N), m_FresnelParams.z);
     }
 #endif
-*/
+
 // JME3 lights in world space
 void lightComputeDir(in vec3 worldPos, in vec4 color, in vec4 position, out vec4 lightDir){
     float posLight = step(0.5, color.w);
@@ -174,8 +179,6 @@ void main(){
      #endif
    #endif
 
-    vtVertex = vec4(inPosition,0.0);
-    vtNormal = inNormal;
    //computing spot direction in view space and unpacking spotlight cos
 //   spotVec = (g_ViewMatrix * vec4(g_LightDirection.xyz, 0.0) );
 //   spotVec.w  = floor(g_LightDirection.w) * 0.001;
@@ -204,6 +207,7 @@ void main(){
     #ifdef USE_REFLECTION
         computeRef();
     #endif 
-	
-	fog_z = gl_Position.z;
+
+    vtVertex = vec4(inPosition,0.0);
+    vtNormal = inNormal;
 }
