@@ -6,11 +6,6 @@ uniform mat4 g_WorldViewMatrix;
 uniform mat3 g_NormalMatrix;
 uniform mat4 g_ViewMatrix;
 
-uniform vec4 m_FogColor;
-uniform float m_FogDensity;
-uniform float m_FogDistance;
-varying float fog_z;
-
 uniform vec4 m_Ambient;
 uniform vec4 m_Diffuse;
 uniform vec4 m_Specular;
@@ -209,6 +204,4 @@ void main(){
     #ifdef USE_REFLECTION
         computeRef();
     #endif 
-	
-	fog_z = gl_Position.z;
 }
