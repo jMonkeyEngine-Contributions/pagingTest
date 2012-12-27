@@ -21,12 +21,17 @@ import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
+import com.jme3.post.FilterPostProcessor;
 import com.jme3.renderer.RenderManager;
+import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import paging.core.DelegatorListener;
 import paging.core.PagingManager;
+import pagingTests.supportFiles.FogFilter;
+import pagingTests.supportFiles.SkyDome;
 import pagingTests.supportFiles.TerrainGridDelegator;
 import pagingTests.supportFiles.TerrainSimpleGrassDelegator;
 import pagingTests.supportFiles.TerrainSimpleTreeDelegator;
@@ -44,6 +49,8 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 	CharacterControl character;
 	Node cameraNode;
 	ChaseCamera chaseCam;
+	
+	SkyDome skyDome;
 	
 	VideoRecorderAppState vrAppState;
 	
@@ -83,12 +90,12 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 		
 		int tSize = 10;
 		int gSize = 41;
-		float gQSize = 1.5f;
+		float gQSize = 5f;
 		
 		TerrainGridDelegator terrainDelegator = new TerrainGridDelegator(assetManager, gSize, gQSize);
 		terrainDelegator.setTile(((float)(gSize-1))*gQSize, tSize, true);
 		terrainDelegator.setManagePhysics(true);
-		terrainDelegator.setManageLOD(true);
+		terrainDelegator.setManageLOD(false);
 		terrainDelegator.addLOD(PagingManager.LOD.LOD_1, 0f);
 		terrainDelegator.addLOD(PagingManager.LOD.LOD_2, 640f);
 		terrainDelegator.addLOD(PagingManager.LOD.LOD_3, 1280f);
@@ -97,15 +104,18 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 		
 		pm.registerDelegator("Terrain", terrainDelegator, rootNode, 60);
 		
-		TerrainSimpleGrassDelegator terrainGrassDelegator = new TerrainSimpleGrassDelegator(assetManager, ((float)(gSize-1))*gQSize, 1.25f, 3f, gQSize*2, 1);
+		TerrainSimpleGrassDelegator terrainGrassDelegator = new TerrainSimpleGrassDelegator(assetManager, ((float)(gSize-1))*gQSize, 1.25f, 3f, gQSize*1.5f, 1);
 		terrainGrassDelegator.setManagePhysics(false);
 		terrainGrassDelegator.setManageLOD(false);
+	//	terrainGrassDelegator.setManageObjectFading(true);
+		terrainGrassDelegator.setRenderBucket(RenderQueue.Bucket.Transparent);
 		terrainDelegator.addDependantDelegator("Grass", terrainGrassDelegator);
 		
 		TerrainSimpleTreeDelegator terrainTreeDelegator = new TerrainSimpleTreeDelegator(assetManager, ((float)(gSize-1))*gQSize);
 		terrainTreeDelegator.setTile(((float)(gSize-1))*gQSize, tSize, true);
 		terrainTreeDelegator.setManagePhysics(false);
 		terrainTreeDelegator.setManageLOD(false);
+		terrainTreeDelegator.setRenderBucket(RenderQueue.Bucket.Transparent);
 		pm.registerDelegator("Tree", terrainTreeDelegator, rootNode, 30);
 		terrainDelegator.addListener(terrainTreeDelegator);
 		
@@ -120,9 +130,53 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 		ColorRGBA nightLight = new ColorRGBA(.4f,.4f,.4f,1f);
 		
 		DirectionalLight sun = new DirectionalLight();
-		sun.setDirection(new Vector3f(-.2f,-1f,-.2f).normalizeLocal());
+		sun.setDirection(new Vector3f(0f,-.25f,0f).normalizeLocal());
 		sun.setColor(dayLight);
 		rootNode.addLight(sun);
+		
+		ColorRGBA fogColor = new ColorRGBA(0.7f, 0.7f, 0.7f, 0.6f);
+		ColorRGBA fogNightColor = new ColorRGBA(0.35f, 0.35f, 0.45f, 0.6f);
+		/*
+		// FPP
+		FilterPostProcessor fpp = new FilterPostProcessor(assetManager);
+		
+		FogFilter fog = new FogFilter();
+		fog.setFogMode(FogFilter.FOG_MODE.EXP2_DISTANCE_TO_INFINITY);
+		fog.setFogColor(fogNightColor);
+		fog.setFogStartDistance(140f);
+		fog.setFogEndDistance(600f);
+		fog.setFogDensity(0.0115f);
+		fog.setExcludeSky(true);
+		fpp.addFilter(fog);
+		
+		viewPort.addProcessor(fpp);
+		viewPort.setBackgroundColor(fogNightColor);
+		
+		skyDome = new SkyDome(assetManager, cam,
+				"Models/Skies/SkyDome.j3o",
+				"Textures/Skies/SkyNight_L.png",
+				"Textures/Skies/Sun_L.png",
+				"Textures/Skies/Moon_L.png",
+				"Textures/Skies/Clouds_L.png",
+				"Textures/Skies/Fog_Alpha.png");
+		Node sky = new Node();
+		sky.setQueueBucket(RenderQueue.Bucket.Sky);
+	//	skyDome.setSpatial(sky);
+		sky.addControl(skyDome);
+		sky.setCullHint(Spatial.CullHint.Never);
+		skyDome.setFogFilter(fog, viewPort);
+		skyDome.setFogColor(fogColor);
+		skyDome.setFogNightColor(fogNightColor);
+		skyDome.setControlFog(true);
+		skyDome.setSun(sun);
+		skyDome.setSunDayLight(dayLight);
+		skyDome.setSunNightLight(nightLight);
+		skyDome.setControlSun(true);
+		skyDome.initializeCalendar(1, 5, 24, 7, 4, 12);
+		skyDome.setUseCalendar(false);
+		skyDome.setEnabled(true);
+		rootNode.attachChild(sky);
+		*/
 	}
 	
 	private void createCharacter() {
@@ -219,8 +273,8 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 	
 	@Override
 	public void stop() {
-		exec.shutdown();
 		super.stop();
+		exec.shutdown();
 	}
 
 	public void onAddToScene(Node node) {
