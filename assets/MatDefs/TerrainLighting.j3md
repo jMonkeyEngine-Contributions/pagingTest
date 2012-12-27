@@ -1,14 +1,7 @@
 MaterialDef Phong Lighting {
 
     MaterialParameters {
-		// Fog Params
-		Int FogMode : 1
-		Color FogColor
-		Float FogDensity : 0.2
-		Float FogStartDistance : 15.0
-		Float FogEndDistance : 250.0
-		Boolean ExcludeSky
-		
+
         // Compute vertex lighting in the shader
         // For better performance
         Boolean VertexLighting
@@ -21,6 +14,9 @@ MaterialDef Phong Lighting {
 
         // Output alpha from the diffuse map
         Boolean UseAlpha
+
+        // Apha threshold for fragment discarding
+        Float AlphaDiscardThreshold (AlphaTestFallOff)
 
         // Normal map is in BC5/ATI2n/LATC/3Dc compression format
         Boolean LATC
@@ -112,24 +108,33 @@ MaterialDef Phong Lighting {
         Texture2D ShadowMap1
         Texture2D ShadowMap2
         Texture2D ShadowMap3
+        //pointLights
+        Texture2D ShadowMap4
+        Texture2D ShadowMap5
         
         Float ShadowIntensity
         Vector4 Splits
+        Vector2 FadeInfo
 
         Matrix4 LightViewProjectionMatrix0
         Matrix4 LightViewProjectionMatrix1
         Matrix4 LightViewProjectionMatrix2
         Matrix4 LightViewProjectionMatrix3
+        //pointLight
+        Matrix4 LightViewProjectionMatrix4
+        Matrix4 LightViewProjectionMatrix5   
+        Vector3 LightPos
 
         Float PCFEdge
+        Float ShadowMapSize
 
 		// Terrain shit
 		Texture2D DiffuseMap1
 		Texture2D DiffuseMap2
-		Texture2D DiffuseMap3
 		Float DiffuseScale1 : 1.0
 		Float DiffuseScale2 : 1.0
-		Float DiffuseScale3 : 1.0
+		Texture2D NormalMap1
+		Texture2D NormalMap2
     }
 
     Technique {
@@ -172,11 +177,12 @@ MaterialDef Phong Lighting {
             SEPARATE_TEXCOORD : SeparateTexCoord
 
             USE_REFLECTION : EnvMap
-            SPHERE_MAP : EnvMapAsSphereMap  
+            SPHERE_MAP : SphereMap  
 			
 			HAS_DIF_1 : DiffuseMap1
 			HAS_DIF_2 : DiffuseMap2
-			HAS_DIF_3 : DiffuseMap3
+			HAS_NORM_1 : NormalMap1
+			HAS_NORM_2 : NormalMap2         
         }
     }
 
@@ -190,15 +196,16 @@ MaterialDef Phong Lighting {
             WorldViewMatrix
         }
 
-        Defines {           
-            DIFFUSEMAP : DiffuseMap
+        Defines {
+            COLOR_MAP : ColorMap
+            DISCARD_ALPHA : AlphaDiscardThreshold
         }
 
-        RenderState {
+        ForcedRenderState {
             FaceCull Off
             DepthTest On
             DepthWrite On
-            PolyOffset 5 0
+            PolyOffset 5 3
             ColorWrite Off
         }
 
@@ -206,8 +213,8 @@ MaterialDef Phong Lighting {
 
 
     Technique PostShadow15{
-        VertexShader GLSL150:   Common/MatDefs/Shadow/PostShadowPSSM.vert
-        FragmentShader GLSL150: Common/MatDefs/Shadow/PostShadowPSSM15.frag
+        VertexShader GLSL150:   Common/MatDefs/Shadow/PostShadow.vert
+        FragmentShader GLSL150: Common/MatDefs/Shadow/PostShadow15.frag
 
         WorldParameters {
             WorldViewProjectionMatrix
@@ -218,17 +225,24 @@ MaterialDef Phong Lighting {
             HARDWARE_SHADOWS : HardwareShadows
             FILTER_MODE : FilterMode
             PCFEDGE : PCFEdge
-            DIFFUSEMAP : DiffuseMap         
+            DISCARD_ALPHA : AlphaDiscardThreshold
+            COLOR_MAP : ColorMap
+            SHADOWMAP_SIZE : ShadowMapSize
+            FADE : FadeInfo
+            PSSM : Splits
+            POINTLIGHT : LightViewProjectionMatrix5
         }
 
-        RenderState {
-            Blend Alpha
+        ForcedRenderState {
+            Blend Modulate
+            DepthWrite Off                 
+            PolyOffset -0.1 0
         }
     }
 
     Technique PostShadow{
-        VertexShader GLSL100:   Common/MatDefs/Shadow/PostShadowPSSM.vert
-        FragmentShader GLSL100: Common/MatDefs/Shadow/PostShadowPSSM.frag
+        VertexShader GLSL100:   Common/MatDefs/Shadow/PostShadow.vert
+        FragmentShader GLSL100: Common/MatDefs/Shadow/PostShadow.frag
 
         WorldParameters {
             WorldViewProjectionMatrix
@@ -239,11 +253,18 @@ MaterialDef Phong Lighting {
             HARDWARE_SHADOWS : HardwareShadows
             FILTER_MODE : FilterMode
             PCFEDGE : PCFEdge
-            DIFFUSEMAP : DiffuseMap     
+            DISCARD_ALPHA : AlphaDiscardThreshold
+            COLOR_MAP : ColorMap
+            SHADOWMAP_SIZE : ShadowMapSize
+            FADE : FadeInfo
+            PSSM : Splits
+            POINTLIGHT : LightViewProjectionMatrix5
         }
 
-        RenderState {
-            Blend Alpha
+        ForcedRenderState {
+            Blend Modulate
+            DepthWrite Off   
+            PolyOffset -0.1 0  
         }
     }
 
@@ -292,6 +313,10 @@ MaterialDef Phong Lighting {
             SPECULARMAP : SpecularMap
             PARALLAXMAP : ParallaxMap
         }
+    }
+
+    Technique {
+        LightMode FixedPipeline
     }
 
     Technique Glow {
