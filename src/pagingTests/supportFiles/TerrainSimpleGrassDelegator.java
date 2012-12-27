@@ -38,7 +38,7 @@ public class TerrainSimpleGrassDelegator extends ManagedMeshDelegator {
 	
 	AssetManager assetManager;
 	Material grassMat;
-	Texture grassTex;
+	Texture grassTex, grassNTex;
 	float tileDimensions, imposterHeight, imposterWidth;
 //	int impostorTotal = 200;
 	float terrainQuadSize = 1.5f;
@@ -57,14 +57,20 @@ public class TerrainSimpleGrassDelegator extends ManagedMeshDelegator {
 		grassTex.setMagFilter(Texture.MagFilter.Bilinear);
 		grassTex.setWrap(Texture.WrapMode.Repeat);
 		
+		grassNTex = assetManager.loadTexture("Textures/Vegetation/Grass001_n.png");
+		grassNTex.setMinFilter(Texture.MinFilter.BilinearNearestMipMap);
+		grassNTex.setMagFilter(Texture.MagFilter.Bilinear);
+		grassNTex.setWrap(Texture.WrapMode.Repeat);
+		
 		grassMat = new Material(assetManager, "MatDefs/Lighting.j3md");
 		grassMat.setBoolean("UseMaterialColors", true);
 		grassMat.setBoolean("HighQuality", true);
-		grassMat.setFloat("Shininess", .0f);
+		grassMat.setFloat("Shininess", 0f);
 		grassMat.setColor("Ambient", ColorRGBA.White);
-		grassMat.setColor("Diffuse", ColorRGBA.White);
+		grassMat.setColor("Diffuse", new ColorRGBA(1f, 1f, 1f, 1f));
 		grassMat.setTexture("DiffuseMap", grassTex);
-		grassMat.setFloat("AlphaDiscardThreshold", 0.75f);
+		grassMat.setTexture("NormalMap", grassNTex);
+		grassMat.setFloat("AlphaDiscardThreshold", 0.5f);
 		grassMat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Back);
 		grassMat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
 	}
@@ -86,8 +92,8 @@ public class TerrainSimpleGrassDelegator extends ManagedMeshDelegator {
 	public void delegatorTaskCustomData(float tpf, DelegatorTask task) {
 		Vector3f position;
 		List<Vector3f> positions = new ArrayList();
-		for (int x = 0; x < (int)(tileDimensions/terrainQuadSize); x++) {
-			for (int z = 0; z < (int)(tileDimensions/terrainQuadSize); z++) {
+		for (int x = -1; x < (int)(tileDimensions/terrainQuadSize)+1; x++) {
+			for (int z = -1; z < (int)(tileDimensions/terrainQuadSize)+1; z++) {
 				for (int i = 0; i < impostorsPerQuad; i++) {
 					float rand1 = (float)Math.random()*terrainQuadSize;
 					float rand2 = (float)Math.random()*terrainQuadSize;

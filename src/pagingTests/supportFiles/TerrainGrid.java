@@ -56,8 +56,6 @@ public final class TerrainGrid extends ManagedMesh {
 	AssetManager assetManager;
 	
 	int textureCount = 4;
-	Texture tex1, tex2, tex3, tex4, texA1, texA2, texA3, texA4;
-	Material mat;
 	
 	/**
 	 * Creates a new Terrain Grid
@@ -78,36 +76,6 @@ public final class TerrainGrid extends ManagedMesh {
 			(int)FastMath.floor(position.z/gridDimensions)
 		);
 		this.geomName = String.valueOf(gridPosition.x) + "-" + String.valueOf(gridPosition.y);
-		
-		
-		tex1 = assetManager.loadTexture("Textures/TerrainTiles/diffuse3.png");
-		tex1.setMinFilter(MinFilter.BilinearNearestMipMap);
-		tex1.setMagFilter(MagFilter.Bilinear);
-		tex1.setWrap(WrapMode.Repeat);
-		
-		tex2 = assetManager.loadTexture("Textures/TerrainTiles/diffuse4.png");
-		tex2.setMinFilter(MinFilter.BilinearNearestMipMap);
-		tex2.setMagFilter(MagFilter.Bilinear);
-		tex2.setWrap(WrapMode.Repeat);
-		
-		tex3 = assetManager.loadTexture("Textures/TerrainTiles/diffuse3.png");
-		tex3.setMinFilter(MinFilter.BilinearNearestMipMap);
-		tex3.setMagFilter(MagFilter.Bilinear);
-		tex3.setWrap(WrapMode.Repeat);
-		
-		mat = new Material(assetManager, "MatDefs/TerrainLighting.j3md");
-		mat.setBoolean("UseMaterialColors", true);
-		mat.setBoolean("HighQuality", true);
-		mat.setFloat("Shininess", .0f);
-		mat.setColor("Ambient", ColorRGBA.White);
-		mat.setColor("Diffuse", ColorRGBA.White);
-		mat.getAdditionalRenderState().setFaceCullMode(FaceCullMode.Off);
-		mat.setTexture("DiffuseMap1", tex1);
-		mat.setFloat("DiffuseScale1", .1f);
-		mat.setTexture("DiffuseMap2", tex2);
-		mat.setFloat("DiffuseScale2", .15f);
-		mat.setTexture("DiffuseMap3", tex3);
-		mat.setFloat("DiffuseScale3", .2f);
 		
 		this.noiseMap = generateNoiseMap();
 		// Full detail
@@ -375,9 +343,6 @@ public final class TerrainGrid extends ManagedMesh {
 				index++;
 			}
 		}
-	}
-	public Material getMaterial() {
-		return this.mat;
 	}
 	
 	/**

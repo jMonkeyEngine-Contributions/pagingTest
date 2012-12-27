@@ -45,8 +45,8 @@ import paging.core.tasks.DelegatorTask;
 public class TerrainSimpleTreeDelegator extends ManagedNodeDelegator implements DelegatorListener {
 	
 	AssetManager assetManager;
-	Material treeMat;
-	Texture treeTex;
+	Material treeMat, leavesMat;
+	Texture treeTex, leavesTex;
 	float tileDimensions;
 	
 	List<Vector3f> verts = new ArrayList();
@@ -54,14 +54,15 @@ public class TerrainSimpleTreeDelegator extends ManagedNodeDelegator implements 
 	List<Integer> indexes = new ArrayList();
 	List<Float> normals = new ArrayList();
 	
-	Mesh template;
+	Mesh templateTree, templateLeaves;
+	
 	Quaternion qR = new Quaternion();
 	
 	public TerrainSimpleTreeDelegator(AssetManager assetManager, float tileDimensions) {
 		this.assetManager = assetManager;
 		this.tileDimensions = tileDimensions;
 		
-		treeTex = assetManager.loadTexture("Textures/Vegetation/firtree.png");
+		treeTex = assetManager.loadTexture("Textures/Vegetation/Bark.jpg");
 		treeTex.setMinFilter(Texture.MinFilter.BilinearNearestMipMap);
 		treeTex.setMagFilter(Texture.MagFilter.Bilinear);
 		treeTex.setWrap(Texture.WrapMode.Repeat);
@@ -69,16 +70,33 @@ public class TerrainSimpleTreeDelegator extends ManagedNodeDelegator implements 
 		treeMat = new Material(assetManager, "MatDefs/Lighting.j3md");
 		treeMat.setBoolean("UseMaterialColors", true);
 		treeMat.setBoolean("HighQuality", true);
-		treeMat.setFloat("Shininess", .0f);
+		treeMat.setFloat("Shininess", 0f);
 		treeMat.setColor("Ambient", ColorRGBA.White);
 		treeMat.setColor("Diffuse", ColorRGBA.White);
 		treeMat.setTexture("DiffuseMap", treeTex);
-		treeMat.setFloat("AlphaDiscardThreshold", 0.75f);
+	//	treeMat.setFloat("AlphaDiscardThreshold", 0.75f);
 		treeMat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Back);
 		treeMat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
+		
+		leavesTex = assetManager.loadTexture("Textures/Vegetation/Leaves.png");
+		leavesTex.setMinFilter(Texture.MinFilter.BilinearNearestMipMap);
+		leavesTex.setMagFilter(Texture.MagFilter.Bilinear);
+		leavesTex.setWrap(Texture.WrapMode.Repeat);
+		
+		leavesMat = new Material(assetManager, "MatDefs/Lighting.j3md");
+		leavesMat.setBoolean("UseMaterialColors", true);
+		leavesMat.setBoolean("HighQuality", true);
+		leavesMat.setFloat("Shininess", 0f);
+		leavesMat.setColor("Ambient", ColorRGBA.White);
+		leavesMat.setColor("Diffuse", ColorRGBA.White);
+		leavesMat.setTexture("DiffuseMap", leavesTex);
+		leavesMat.setFloat("AlphaDiscardThreshold", 0.35f);
+		leavesMat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Back);
+		leavesMat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
 	//	treeMat.setTexture("Diffuse", null);
 		
-		template = ((Geometry)((Node)assetManager.loadModel("Models/firtree.j3o")).getChild(0)).getMesh();
+		templateTree = ((Geometry)((Node)assetManager.loadModel("Models/Vegetation/Pine.j3o")).getChild(0)).getMesh();
+		templateLeaves = ((Geometry)((Node)assetManager.loadModel("Models/Vegetation/Leaves.j3o")).getChild(0)).getMesh();
 		/*
 		FloatBuffer positions = template.getFloatBuffer(VertexBuffer.Type.Position);
 		for (int i = 0; i < positions.limit(); i += 3) {
@@ -109,7 +127,7 @@ public class TerrainSimpleTreeDelegator extends ManagedNodeDelegator implements 
 	@Override
 	public Geometry getGeometry() {
 		Geometry geom = new Geometry();
-		geom.setMaterial(treeMat);
+	//	geom.setMaterial(treeMat);
 		return geom;
 	}
 
@@ -143,13 +161,13 @@ public class TerrainSimpleTreeDelegator extends ManagedNodeDelegator implements 
 		if (!tiles.containsKey(position)) {
 			ManagedNode nNode = addTrees(new ManagedNode(), node, node.getLocalTranslation());
 			nNode.setLocalTranslation(position);
-			nNode.setMaterial(treeMat);
+		//	nNode.setMaterial(treeMat);
 			this.addManagedNode(nNode);
 		}
 	}
 	
 	private ManagedNode addTrees(ManagedNode ret, Node n, Vector3f position) {
-		int cVerts = 5; //(int)Math.round(Math.random()*30);
+		int cVerts = 1;//(int)Math.round(Math.random()*5);
 		for (int i = 0; i < cVerts; i++) {
 			float rand1 = (float)Math.random()*tileDimensions;
 			float rand2 = (float)Math.random()*tileDimensions;
@@ -174,12 +192,22 @@ public class TerrainSimpleTreeDelegator extends ManagedNodeDelegator implements 
 				qR = qR.fromAngleAxis( ((float)(Math.random()*360f))*FastMath.DEG_TO_RAD, Vector3f.UNIT_Y);
 				float scale = (float)Math.random();
 				
-				Geometry geom = new Geometry("Tree");
-				geom.setMesh(template);
-				geom.setLocalTranslation(loc.subtract(position));
-				geom.setLocalRotation(qR);
-				geom.setLocalScale(1f+scale);
-				ret.attachChild(geom);
+				Geometry geomt = new Geometry("Tree");
+				geomt.setMesh(templateTree);
+				geomt.setLocalTranslation(loc.subtract(position));
+				geomt.setLocalRotation(qR);
+				geomt.setLocalScale(1f+scale);
+				geomt.setMaterial(treeMat);
+				
+				Geometry geoml = new Geometry("Leaves");
+				geoml.setMesh(templateLeaves);
+				geoml.setLocalTranslation(loc.subtract(position));
+				geoml.setLocalRotation(qR);
+				geoml.setLocalScale(1f+scale);
+				geoml.setMaterial(leavesMat);
+				
+				ret.attachChild(geomt);
+				ret.attachChild(geoml);
 			}
 		}
 		return ret;

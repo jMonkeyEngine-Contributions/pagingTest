@@ -31,13 +31,23 @@ public class TerrainGridDelegator extends ManagedMeshDelegator {
 	private AssetManager assetManager;
 	private int gridSize;
 	private float gridQuadSize;
-	private Texture diffuse1, diffuse2, diffuse3;
+	private Texture diffuse1, diffuse2, diffuse3, normal1, normal2;
 	private Material terrainMat;
 	
 	public TerrainGridDelegator(AssetManager assetManager, int gridSize, float gridQuadSize) {
 		this.assetManager = assetManager;
 		this.gridSize = gridSize;
 		this.gridQuadSize = gridQuadSize;
+		
+		normal1 = assetManager.loadTexture("Textures/TerrainTiles/diffuse3_n.png");
+		normal1.setMinFilter(Texture.MinFilter.BilinearNearestMipMap);
+		normal1.setMagFilter(Texture.MagFilter.Bilinear);
+		normal1.setWrap(Texture.WrapMode.Repeat);
+		
+		normal2 = assetManager.loadTexture("Textures/TerrainTiles/diffuse4_n.png");
+		normal2.setMinFilter(Texture.MinFilter.BilinearNearestMipMap);
+		normal2.setMagFilter(Texture.MagFilter.Bilinear);
+		normal2.setWrap(Texture.WrapMode.Repeat);
 		
 		diffuse1 = assetManager.loadTexture("Textures/TerrainTiles/diffuse3.png");
 		diffuse1.setMinFilter(Texture.MinFilter.BilinearNearestMipMap);
@@ -57,15 +67,15 @@ public class TerrainGridDelegator extends ManagedMeshDelegator {
 		terrainMat = new Material(assetManager, "MatDefs/TerrainLighting.j3md");
 		terrainMat.setBoolean("UseMaterialColors", true);
 		terrainMat.setBoolean("HighQuality", true);
-		terrainMat.setFloat("Shininess", .0f);
+		terrainMat.setFloat("Shininess", 0f);
 		terrainMat.setColor("Ambient", ColorRGBA.White);
 		terrainMat.setColor("Diffuse", ColorRGBA.White);
 		terrainMat.setTexture("DiffuseMap1", diffuse1);
-		terrainMat.setFloat("DiffuseScale1", .01f);
+	//	terrainMat.setTexture("NormalMap1", normal1);
+		terrainMat.setFloat("DiffuseScale1", 1f/12f);
 		terrainMat.setTexture("DiffuseMap2", diffuse2);
-		terrainMat.setFloat("DiffuseScale2", .008f);
-		terrainMat.setTexture("DiffuseMap3", diffuse3);
-		terrainMat.setFloat("DiffuseScale3", .2f);
+	//	terrainMat.setTexture("NormalMap2", normal2);
+		terrainMat.setFloat("DiffuseScale2", 1f/12f);
 		terrainMat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Back);
 	//	terrainMat.getAdditionalRenderState().setWireframe(true);
 	}
