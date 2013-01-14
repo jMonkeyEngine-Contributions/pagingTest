@@ -127,14 +127,18 @@ MaterialDef Phong Lighting {
 
         Float PCFEdge
         Float ShadowMapSize
+		
+		Float FadeStartDistance
+		Float FadeMaxDistance
+		Boolean UseFade
     }
 
     Technique {
 
         LightMode MultiPass
 
-        VertexShader GLSL100:   Common/MatDefs/Light/Lighting.vert
-        FragmentShader GLSL100: Common/MatDefs/Light/Lighting.frag
+        VertexShader GLSL100:   Shaders/Lighting.vert
+        FragmentShader GLSL100: Shaders/Lighting.frag
 
         WorldParameters {
             WorldViewProjectionMatrix
@@ -169,7 +173,9 @@ MaterialDef Phong Lighting {
             SEPARATE_TEXCOORD : SeparateTexCoord
 
             USE_REFLECTION : EnvMap
-            SPHERE_MAP : SphereMap            
+            SPHERE_MAP : SphereMap          
+
+			USE_FADE : UseFade
         }
     }
 

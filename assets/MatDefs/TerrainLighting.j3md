@@ -135,6 +135,10 @@ MaterialDef Phong Lighting {
 		Float DiffuseScale2 : 1.0
 		Texture2D NormalMap1
 		Texture2D NormalMap2
+		
+		Float FadeStartDistance
+		Float FadeMaxDistance
+		Boolean UseFade
     }
 
     Technique {
@@ -183,6 +187,8 @@ MaterialDef Phong Lighting {
 			HAS_DIF_2 : DiffuseMap2
 			HAS_NORM_1 : NormalMap1
 			HAS_NORM_2 : NormalMap2         
+
+			USE_FADE : UseFade
         }
     }
 
