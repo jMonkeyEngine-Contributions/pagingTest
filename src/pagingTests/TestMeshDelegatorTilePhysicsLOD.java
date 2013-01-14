@@ -90,36 +90,39 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 		
 		rootNode.addControl(pm);
 		
-		int tSize = 10;
-		int gSize = 41;
-		float gQSize = 5f;
+		int tSize = 6;
+		int gSize = 81;
+		float gQSize = 10f;
 		
 		TerrainGridDelegator terrainDelegator = new TerrainGridDelegator(assetManager, gSize, gQSize);
 		terrainDelegator.setTile(((float)(gSize-1))*gQSize, tSize, true);
 		terrainDelegator.setManagePhysics(true);
-		terrainDelegator.setManageLOD(false);
+		terrainDelegator.setManageLOD(true);
 		terrainDelegator.addLOD(PagingManager.LOD.LOD_1, 0f);
-		terrainDelegator.addLOD(PagingManager.LOD.LOD_2, 640f);
-		terrainDelegator.addLOD(PagingManager.LOD.LOD_3, 1280f);
+		terrainDelegator.addLOD(PagingManager.LOD.LOD_2, 1600f);
+		terrainDelegator.addLOD(PagingManager.LOD.LOD_3, 2400f);
 		
 		terrainDelegator.addListener(this);
 		
-		pm.registerDelegator("Terrain", terrainDelegator, rootNode, 60);
-		
+		pm.registerDelegator("Terrain", terrainDelegator, rootNode, 5);
+		/*
 		TerrainSimpleGrassDelegator terrainGrassDelegator = new TerrainSimpleGrassDelegator(assetManager, ((float)(gSize-1))*gQSize, 1.25f, 3f, gQSize*1.5f, 1);
 		terrainGrassDelegator.setManagePhysics(false);
 		terrainGrassDelegator.setManageLOD(false);
 	//	terrainGrassDelegator.setManageObjectFading(true);
 		terrainGrassDelegator.setRenderBucket(RenderQueue.Bucket.Transparent);
 		terrainDelegator.addDependantDelegator("Grass", terrainGrassDelegator);
+		*/
+		tSize = 4;
+		gSize = 41;
+		gQSize = 2.5f;
 		
 		TerrainSimpleTreeDelegator terrainTreeDelegator = new TerrainSimpleTreeDelegator(assetManager, ((float)(gSize-1))*gQSize);
 		terrainTreeDelegator.setTile(((float)(gSize-1))*gQSize, tSize, true);
 		terrainTreeDelegator.setManagePhysics(false);
 		terrainTreeDelegator.setManageLOD(false);
 		terrainTreeDelegator.setRenderBucket(RenderQueue.Bucket.Transparent);
-		pm.registerDelegator("Tree", terrainTreeDelegator, rootNode, 30);
-		terrainDelegator.addListener(terrainTreeDelegator);
+		pm.registerDelegator("Tree", terrainTreeDelegator, rootNode, 5);
 		
 		createCharacter();
 		setupKeys();
@@ -145,14 +148,14 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 		FogFilter fog = new FogFilter();
 		fog.setFogMode(FogFilter.FOG_MODE.EXP2_DISTANCE_TO_INFINITY);
 		fog.setFogColor(fogNightColor);
-		fog.setFogStartDistance(140f);
-		fog.setFogEndDistance(600f);
-		fog.setFogDensity(0.0115f);
+		fog.setFogStartDistance(600f);
+	//	fog.setFogEndDistance(7000f);
+		fog.setFogDensity(0.15f);
 		fog.setExcludeSky(true);
-		fpp.addFilter(fog);
+	//	fpp.addFilter(fog);
 		
-		viewPort.addProcessor(fpp);
-		viewPort.setBackgroundColor(fogNightColor);
+	//	viewPort.addProcessor(fpp);
+	//	viewPort.setBackgroundColor(fogNightColor);
 		
 		skyDome = new SkyDome(assetManager, cam,
 				"Models/Skies/SkyDome.j3o",
@@ -176,8 +179,8 @@ public class TestMeshDelegatorTilePhysicsLOD extends SimpleApplication implement
 		skyDome.setControlSun(true);
 		skyDome.initializeCalendar(1, 5, 24, 7, 4, 12);
 		skyDome.setUseCalendar(false);
-		skyDome.setEnabled(true);
-		rootNode.attachChild(sky);
+	//	skyDome.setEnabled(true);
+	//	rootNode.attachChild(sky);
 		*/
 	}
 	
