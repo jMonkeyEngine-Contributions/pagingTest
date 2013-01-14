@@ -25,34 +25,38 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.control.Control;
+import com.jme3.scene.mesh.IndexBuffer;
 import com.jme3.texture.Texture;
 import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import paging.core.DelegatorListener;
 import paging.core.ManagedMeshDelegator;
+import paging.core.ManagedMeshesAsNodeDelegator;
 import paging.core.ManagedNodeDelegator;
 import paging.core.spatials.ManagedMesh;
+import paging.core.spatials.ManagedMeshFromTemplate;
 import paging.core.spatials.ManagedNode;
 import paging.core.tasks.DelegatorTask;
+import paging.core.utils.MeshInfo;
+import paging.core.utils.MeshUtils;
 
 /**
  *
  * @author t0neg0d
  */
-public class TerrainSimpleTreeDelegator extends ManagedNodeDelegator implements DelegatorListener {
-	
+public class TerrainSimpleTreeDelegator extends ManagedMeshesAsNodeDelegator {
 	AssetManager assetManager;
 	Material treeMat, leavesMat;
 	Texture treeTex, leavesTex;
 	float tileDimensions;
 	
-	List<Vector3f> verts = new ArrayList();
-	List<Vector2f> coords = new ArrayList();
-	List<Integer> indexes = new ArrayList();
-	List<Float> normals = new ArrayList();
+	FloatBuffer verts, verts2, coords, coords2, normals, normals2;
+	IndexBuffer indexes, indexes2;
 	
 	Mesh templateTree, templateLeaves;
 	
@@ -62,6 +66,22 @@ public class TerrainSimpleTreeDelegator extends ManagedNodeDelegator implements 
 		this.assetManager = assetManager;
 		this.tileDimensions = tileDimensions;
 		
+		templateTree = ((Geometry)((Node)assetManager.loadModel("Models/Vegetation/Pine.j3o")).getChild(0)).getMesh();
+		templateLeaves = ((Geometry)((Node)assetManager.loadModel("Models/Vegetation/Leaves.j3o")).getChild(0)).getMesh();
+		
+		// Extract template buffers
+		verts = MeshUtils.getPositionBuffer(templateTree);
+		coords = MeshUtils.getTexCoordBuffer(templateTree);
+		indexes = MeshUtils.getIndexBuffer(templateTree);
+		normals = MeshUtils.getNormalsBuffer(templateTree);
+		verts2 = MeshUtils.getPositionBuffer(templateLeaves);
+		coords2 = MeshUtils.getTexCoordBuffer(templateLeaves);
+		indexes2 = MeshUtils.getIndexBuffer(templateLeaves);
+		normals2 = MeshUtils.getNormalsBuffer(templateLeaves);
+	}
+
+	@Override
+	public void initDelegatorMaterials() {
 		treeTex = assetManager.loadTexture("Textures/Vegetation/Bark.jpg");
 		treeTex.setMinFilter(Texture.MinFilter.BilinearNearestMipMap);
 		treeTex.setMagFilter(Texture.MagFilter.Bilinear);
@@ -74,6 +94,9 @@ public class TerrainSimpleTreeDelegator extends ManagedNodeDelegator implements 
 		treeMat.setColor("Ambient", ColorRGBA.White);
 		treeMat.setColor("Diffuse", ColorRGBA.White);
 		treeMat.setTexture("DiffuseMap", treeTex);
+		treeMat.setBoolean("UseFade", true);
+		treeMat.setFloat("FadeStartDistance", 400f);
+		treeMat.setFloat("FadeMaxDistance", 600f);
 	//	treeMat.setFloat("AlphaDiscardThreshold", 0.75f);
 		treeMat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Back);
 		treeMat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
@@ -91,43 +114,103 @@ public class TerrainSimpleTreeDelegator extends ManagedNodeDelegator implements 
 		leavesMat.setColor("Diffuse", ColorRGBA.White);
 		leavesMat.setTexture("DiffuseMap", leavesTex);
 		leavesMat.setFloat("AlphaDiscardThreshold", 0.35f);
+		leavesMat.setBoolean("UseFade", true);
+		leavesMat.setFloat("FadeStartDistance", 400f);
+		leavesMat.setFloat("FadeMaxDistance", 600f);
 		leavesMat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Back);
 		leavesMat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
-	//	treeMat.setTexture("Diffuse", null);
-		
-		templateTree = ((Geometry)((Node)assetManager.loadModel("Models/Vegetation/Pine.j3o")).getChild(0)).getMesh();
-		templateLeaves = ((Geometry)((Node)assetManager.loadModel("Models/Vegetation/Leaves.j3o")).getChild(0)).getMesh();
-		/*
-		FloatBuffer positions = template.getFloatBuffer(VertexBuffer.Type.Position);
-		for (int i = 0; i < positions.limit(); i += 3) {
-			verts.add(new Vector3f(positions.get(i), positions.get(i+1), positions.get(i+2)));
+	}
+
+	@Override
+	protected ManagedNode createNode(Vector3f position, ManagedNode dependantNode, Object customData) {
+		ManagedNode node = new ManagedNode();
+	//	System.out.println("Custom data is null? " + (customData == null));
+		if (customData != null) {
+			if (!((List<MeshInfo>)customData).isEmpty()) {
+				node.setName(UID + ":" + position + ":Node");
+				
+				ManagedMeshFromTemplate trees = new ManagedMeshFromTemplate(assetManager, verts, coords, indexes, normals);
+				trees.setMeshInfo((List<MeshInfo>)customData);
+				
+				ManagedMeshFromTemplate leaves = new ManagedMeshFromTemplate(assetManager, verts2, coords2, indexes2, normals2);
+				leaves.setMeshInfo((List<MeshInfo>)customData);
+			
+				Geometry geom = new Geometry(UID + ":Trunks" + position.x + ":" + position.y + ":" + position.z + ":Geom");
+				geom.setMesh(trees);
+				geom.setMaterial(treeMat);
+				node.attachChild(geom);
+				
+				Geometry geom2 = new Geometry(UID + ":Leaves:" + position.x + ":" + position.y + ":" + position.z + ":Geom");
+				geom2.setMesh(leaves);
+				geom2.setMaterial(leavesMat);
+				node.attachChild(geom2);
+				
+				node.setQueueBucket(bucket);
+			} else {
+				System.out.println("Custom data had 0 MeshInfo entries.");
+			}
+		} else {
+			System.out.println("Custom data was null =(");
 		}
-		
-		FloatBuffer texMap = template.getFloatBuffer(VertexBuffer.Type.TexCoord);
-		for (int i = 0; i < texMap.limit(); i += 2) {
-			coords.add(new Vector2f(texMap.get(i), texMap.get(i+1)));
-		}
-		
-		for (int i = 0; i < template.getIndexBuffer().size(); i++) {
-			indexes.add(template.getIndexBuffer().get(i));
-		}
-		
-		FloatBuffer tempNormals = template.getFloatBuffer(VertexBuffer.Type.Normal);
-		for (int i = 0; i < tempNormals.limit(); i ++) {
-			normals.add(tempNormals.get(i));
-		}
-		*/
+		return node;
 	}
 	
 	@Override
 	public void delegatorTaskCustomData(float tpf, DelegatorTask task) {
-	//	throw new UnsupportedOperationException("Not supported yet.");
+		DelegatorTask terrain = pm.getDelegatorByUID("Terrain").getTaskContainingLocation(task.getPosition());
+		if (terrain != null) {
+			if (terrain.getStage() != DelegatorTask.STAGE.COMPLETE) {
+			//	System.out.println("Terrain task not complete, removing current task.");
+				tiles.remove(task.getPosition());
+			} else {
+			//	System.out.println("Terrain task complete. Creating MeshInfo.");
+				List<MeshInfo> positions = new ArrayList();
+				int cVerts = 3;
+				for (int i = 0; i < cVerts; i++) {
+				//	float offset = (tileDimensions/cVerts*i);
+				//	float rem = tileDimensions-offset;
+					float rand1 = ((float)Math.random()*tileDimensions);
+					float rand2 = ((float)Math.random()*tileDimensions);;
+
+					Ray ray = new Ray();
+
+					ray.setOrigin(task.getPosition().add(rand1, 4000f, rand2));
+					ray.setDirection(Vector3f.UNIT_Y.negate());
+
+					CollisionResults rayResults = new CollisionResults();
+					CollisionResult result = null;
+
+					terrain.getNode().collideWith(ray, rayResults);
+
+					if (rayResults.size() > 0) {
+						result = rayResults.getCollision(0);
+					}
+					if (result != null) {
+					//	System.out.println("Adding MeshInfo entry.");
+						positions.add(
+							new MeshInfo(
+								result.getContactPoint(),
+								new Quaternion().fromAngleAxis((float)Math.random()*360f*2f*FastMath.DEG_TO_RAD, Vector3f.UNIT_Y),
+								0.5f+(float)Math.random()
+							)
+						);
+					}
+				}
+			//	System.out.println("Setting task's custom data");
+				task.setCustomData(positions);
+			}
+		}
+	}
+
+	@Override
+	public void delegatorUpdate(float tpf) {
+		
 	}
 	
 	@Override
 	public Geometry getGeometry() {
 		Geometry geom = new Geometry();
-	//	geom.setMaterial(treeMat);
+		geom.setMaterial(treeMat);
 		return geom;
 	}
 
@@ -148,72 +231,6 @@ public class TerrainSimpleTreeDelegator extends ManagedNodeDelegator implements 
 	}
 
 	public void read(JmeImporter im) throws IOException {
-	//	throw new UnsupportedOperationException("Not supported yet.");
-	}
-
-	@Override
-	public void delegatorUpdate(float tpf) {
-		
-	}
-
-	public void onAddToScene(Node node) {
-		Vector3f position = node.getLocalTranslation();
-		if (!tiles.containsKey(position)) {
-			ManagedNode nNode = addTrees(new ManagedNode(), node, node.getLocalTranslation());
-			nNode.setLocalTranslation(position);
-		//	nNode.setMaterial(treeMat);
-			this.addManagedNode(nNode);
-		}
-	}
-	
-	private ManagedNode addTrees(ManagedNode ret, Node n, Vector3f position) {
-		int cVerts = 1;//(int)Math.round(Math.random()*5);
-		for (int i = 0; i < cVerts; i++) {
-			float rand1 = (float)Math.random()*tileDimensions;
-			float rand2 = (float)Math.random()*tileDimensions;
-			
-			Ray ray = new Ray();
-			
-			ray.setOrigin(position.add(rand1, 4000f, rand2));
-			ray.setDirection(Vector3f.UNIT_Y.negate());
-			
-			CollisionResults rayResults = new CollisionResults();
-			CollisionResult result = null;
-			
-			n.collideWith(ray, rayResults);
-			
-			if (rayResults.size() > 0) {
-				result = rayResults.getCollision(0);
-			}
-			if (result != null) {
-				Vector3f loc = result.getContactPoint();
-			//	position.subtractLocal(startVec);
-				
-				qR = qR.fromAngleAxis( ((float)(Math.random()*360f))*FastMath.DEG_TO_RAD, Vector3f.UNIT_Y);
-				float scale = (float)Math.random();
-				
-				Geometry geomt = new Geometry("Tree");
-				geomt.setMesh(templateTree);
-				geomt.setLocalTranslation(loc.subtract(position));
-				geomt.setLocalRotation(qR);
-				geomt.setLocalScale(1f+scale);
-				geomt.setMaterial(treeMat);
-				
-				Geometry geoml = new Geometry("Leaves");
-				geoml.setMesh(templateLeaves);
-				geoml.setLocalTranslation(loc.subtract(position));
-				geoml.setLocalRotation(qR);
-				geoml.setLocalScale(1f+scale);
-				geoml.setMaterial(leavesMat);
-				
-				ret.attachChild(geomt);
-				ret.attachChild(geoml);
-			}
-		}
-		return ret;
-	}
-	
-	public void onRemoveFromScene(Node node) {
 	//	throw new UnsupportedOperationException("Not supported yet.");
 	}
 }
