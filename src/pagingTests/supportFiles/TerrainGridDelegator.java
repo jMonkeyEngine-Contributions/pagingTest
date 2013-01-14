@@ -38,7 +38,10 @@ public class TerrainGridDelegator extends ManagedMeshDelegator {
 		this.assetManager = assetManager;
 		this.gridSize = gridSize;
 		this.gridQuadSize = gridQuadSize;
-		
+	}
+
+	@Override
+	public void initDelegatorMaterials() {
 		normal1 = assetManager.loadTexture("Textures/TerrainTiles/diffuse3_n.png");
 		normal1.setMinFilter(Texture.MinFilter.BilinearNearestMipMap);
 		normal1.setMagFilter(Texture.MagFilter.Bilinear);
@@ -76,7 +79,11 @@ public class TerrainGridDelegator extends ManagedMeshDelegator {
 		terrainMat.setTexture("DiffuseMap2", diffuse2);
 	//	terrainMat.setTexture("NormalMap2", normal2);
 		terrainMat.setFloat("DiffuseScale2", 1f/12f);
+	//	terrainMat.setBoolean("UseFade", true);
+	//	terrainMat.setFloat("FadeStartDistance", 1000f);
+	//	terrainMat.setFloat("FadeMaxDistance", 1800f);
 		terrainMat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Back);
+	//	terrainMat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
 	//	terrainMat.getAdditionalRenderState().setWireframe(true);
 	}
 	
