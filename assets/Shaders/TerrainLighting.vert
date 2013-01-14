@@ -1,6 +1,8 @@
 #define ATTENUATION
 //#define HQ_ATTENUATION
 
+varying float fadeDepth;
+
 uniform mat4 g_WorldViewProjectionMatrix;
 uniform mat4 g_WorldViewMatrix;
 uniform mat3 g_NormalMatrix;
@@ -210,4 +212,6 @@ void main(){
 
     vtVertex = vec4(inPosition,0.0);
     vtNormal = inNormal;
+
+	fadeDepth = gl_Position.z;
 }

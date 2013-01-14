@@ -3,6 +3,10 @@
 #define ATTENUATION
 //#define HQ_ATTENUATION
 
+varying float fadeDepth;
+uniform float m_FadeStartDistance;
+uniform float m_FadeMaxDistance;
+
 varying vec4 vtVertex;
 varying vec3 vtNormal;
 
@@ -356,4 +360,9 @@ void main(){
                            SpecularSum2.rgb * specularColor.rgb * vec3(light.y);
     #endif
     gl_FragColor.a = alpha;
+	
+	#if defined(USE_FADE)
+		float linDistance1 = 2.0 * fadeDepth - 1.0;
+		gl_FragColor.a = clamp(1.0-((linDistance1 - m_FadeStartDistance) / (m_FadeMaxDistance - m_FadeStartDistance)), 0.0, 1.0);
+	#endif
 }
