@@ -24,6 +24,11 @@ public class SectorDelegator extends ManagedNodeDelegator {
 	public SectorDelegator() {
 		
 	}
+
+	@Override
+	public void initDelegatorMaterials() {
+	//	throw new UnsupportedOperationException("Not supported yet.");
+	}
 	
 	@Override
 	public void delegatorTaskCustomData(float tpf, DelegatorTask task) {
