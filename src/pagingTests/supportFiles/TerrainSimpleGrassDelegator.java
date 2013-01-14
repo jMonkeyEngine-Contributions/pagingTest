@@ -51,7 +51,10 @@ public class TerrainSimpleGrassDelegator extends ManagedMeshDelegator {
 		this.imposterWidth = imposterWidth;
 		this.terrainQuadSize = terrainQuadSize;
 		this.impostorsPerQuad = impostorsPerQuad;
-		
+	}
+	
+	@Override
+	public void initDelegatorMaterials() {
 		grassTex = assetManager.loadTexture("Textures/Vegetation/Grass001.png");
 		grassTex.setMinFilter(Texture.MinFilter.BilinearNearestMipMap);
 		grassTex.setMagFilter(Texture.MagFilter.Bilinear);
@@ -67,10 +70,13 @@ public class TerrainSimpleGrassDelegator extends ManagedMeshDelegator {
 		grassMat.setBoolean("HighQuality", true);
 		grassMat.setFloat("Shininess", 0f);
 		grassMat.setColor("Ambient", ColorRGBA.White);
-		grassMat.setColor("Diffuse", new ColorRGBA(1f, 1f, 1f, 1f));
+		grassMat.setColor("Diffuse", ColorRGBA.White);
 		grassMat.setTexture("DiffuseMap", grassTex);
-		grassMat.setTexture("NormalMap", grassNTex);
+	//	grassMat.setTexture("NormalMap", grassNTex);
 		grassMat.setFloat("AlphaDiscardThreshold", 0.5f);
+		grassMat.setBoolean("UseFade", true);
+		grassMat.setFloat("FadeStartDistance", 200f);
+		grassMat.setFloat("FadeMaxDistance", 400f);
 		grassMat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Back);
 		grassMat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
 	}
@@ -90,6 +96,7 @@ public class TerrainSimpleGrassDelegator extends ManagedMeshDelegator {
 
 	@Override
 	public void delegatorTaskCustomData(float tpf, DelegatorTask task) {
+		
 		Vector3f position;
 		List<Vector3f> positions = new ArrayList();
 		for (int x = -1; x < (int)(tileDimensions/terrainQuadSize)+1; x++) {
